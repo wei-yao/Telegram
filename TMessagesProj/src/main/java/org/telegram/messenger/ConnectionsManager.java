@@ -949,7 +949,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
     public long performRpc(final TLObject rpc, final RPCRequest.RPCRequestDelegate completionBlock, boolean requiresCompletion, int requestClass) {
         return performRpc(rpc, completionBlock, null, requiresCompletion, requestClass, DEFAULT_DATACENTER_ID, true);
     }
-
+   //发送消息
     public long performRpc(final TLObject rpc, final RPCRequest.RPCRequestDelegate completionBlock, final RPCRequest.RPCQuickAckDelegate quickAckBlock, final boolean requiresCompletion, final int requestClass, final int datacenterId) {
         return performRpc(rpc, completionBlock, quickAckBlock, requiresCompletion, requestClass, datacenterId, true);
     }
