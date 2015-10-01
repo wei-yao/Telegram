@@ -52,19 +52,23 @@ import org.telegram.android.AnimationCompat.AnimatorSetProxy;
 import org.telegram.android.AnimationCompat.ObjectAnimatorProxy;
 import org.telegram.android.AnimationCompat.ViewProxy;
 import org.telegram.messenger.ApplicationLoader;
-
+//输入的view
 public class ChatActivityEnterView extends FrameLayoutFixed implements NotificationCenter.NotificationCenterDelegate, SizeNotifierRelativeLayout.SizeNotifierRelativeLayoutDelegate {
 
     public interface ChatActivityEnterViewDelegate {
         void onMessageSend(String message);
+//        void onStegoMsgSend(String msg);
         void needSendTyping();
         void onTextChanged(CharSequence text, boolean bigChange);
         void onAttachButtonHidden();
         void onAttachButtonShow();
         void onWindowSizeChanged(int size);
     }
-
+    private boolean isStego=false;
     private EditText messageEditText;
+    /**
+     * sendbutton 发送消息的按钮.
+     */
     private ImageView sendButton;
     private PopupWindow emojiPopup;
     private ImageView emojiButton;
@@ -524,11 +528,24 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!isStego)
                 sendMessage();
+                else
+                {
+//                    if (delegate != null) {
+//                        delegate.onStegoMsgSend("/storage/emulated/0/baidu/18f40ad162d9f2d3f07c0bcaaaec8a136327cca2.jpg");
+//                    }
+                    sendStegoMsg();
+                }
             }
         });
 
         checkSendButton(false);
+    }
+
+    private void sendStegoMsg() {
+        String path="/storage/emulated/0/baidu/18f40ad162d9f2d3f07c0bcaaaec8a136327cca2.jpg";
+        SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
     }
 
     private void setKeyboardTransitionState(int state) {
@@ -775,6 +792,11 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
         }
     }
 
+    /**
+     * 发送消息
+     * @param text
+     * @return
+     */
     public boolean processSendingText(String text) {
         text = getTrimmedString(text);
         if (text.length() != 0) {

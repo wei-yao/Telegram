@@ -38,6 +38,7 @@ import org.telegram.android.MediaController;
 import org.telegram.android.MessagesController;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.android.NotificationsController;
+import org.telegram.android.SendMessagesHelper;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ConnectionsManager;
 import org.telegram.messenger.FileLoader;
@@ -209,7 +210,10 @@ public class PopupNotificationActivity extends Activity implements NotificationC
                 currentMessageObject = null;
                 getNewMessage();
             }
-
+            @Override
+            public void onStegoMsgSend(String path){
+//                SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
+            }
             @Override
             public void onTextChanged(CharSequence text, boolean big) {
 

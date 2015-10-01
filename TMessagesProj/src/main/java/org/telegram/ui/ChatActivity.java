@@ -596,6 +596,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     fragment.setDelegate(new PhotoAlbumPickerActivity.PhotoAlbumPickerActivityDelegate() {
                         @Override
                         public void didSelectPhotos(ArrayList<String> photos, ArrayList<String> captions, ArrayList<MediaController.SearchImage> webPhotos) {
+                           //发送图片的地方. photos 路径  dialog_id 不明 captions size 是1 但是element是null.
                             SendMessagesHelper.prepareSendingPhotos(photos, null, dialog_id, replyingMessageObject, captions);
                             SendMessagesHelper.prepareSendingPhotosSearch(webPhotos, dialog_id, replyingMessageObject);
                             showReplyPanel(false, null, null, null, false, true);
@@ -1581,6 +1582,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         chatActivityEnterView.setId(id_chat_compose_panel);
         contentView.addView(chatActivityEnterView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.BOTTOM));
         chatActivityEnterView.setDelegate(new ChatActivityEnterView.ChatActivityEnterViewDelegate() {
+//            @Override
+//            public void onStegoMsgSend(String path){
+//                SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
+//            }
             @Override
             public void onMessageSend(String message) {
                 moveScrollToLastMessage();
