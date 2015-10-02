@@ -544,7 +544,7 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
     }
 
     private void sendStegoMsg() {
-        String path="/storage/emulated/0/baidu/18f40ad162d9f2d3f07c0bcaaaec8a136327cca2.jpg";
+        String path="/storage/emulated/0/DCIM/Camera/xifan.jpg";
         SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
     }
 

@@ -422,6 +422,8 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_calcCDT(JNIEnv *env, jclass
 }
 
 JNIEXPORT int Java_org_telegram_messenger_Utilities_pinBitmap(JNIEnv *env, jclass class, jobject bitmap) {
+    if(bitmap==null)
+        return;
     unsigned char *pixels;
     return AndroidBitmap_lockPixels(env, bitmap, &pixels) >= 0 ? 1 : 0;
 }
@@ -430,7 +432,7 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_loadBitmap(JNIEnv *env, jcl
     
     AndroidBitmapInfo info;
     int i;
-    
+
     if ((i = AndroidBitmap_getInfo(env, bitmap, &info)) >= 0) {
         char *fileName = (*env)->GetStringUTFChars(env, path, NULL);
         FILE *infile;
@@ -438,7 +440,7 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_loadBitmap(JNIEnv *env, jcl
         if ((infile = fopen(fileName, "rb"))) {
             struct my_error_mgr jerr;
             struct jpeg_decompress_struct cinfo;
-            
+
             cinfo.err = jpeg_std_error(&jerr.pub);
             jerr.pub.error_exit = my_error_exit;
             
@@ -511,6 +513,75 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_loadBitmap(JNIEnv *env, jcl
     }
 }
 
+JNIEXPORT void Java_org_telegram_messenger_Utilities_lsbEmbed(JNIEnv *env, jclass class,
+                                                              jobject buffer, jstring key,
+                                                              jstring input, jstring output,int len) {
+
+    unsigned char *bytes = (*env)->GetDirectBufferAddress(env, buffer);
+    int dataLen = len * 8;
+    struct jpeg_decompress_struct srcinfo;
+    struct jpeg_compress_struct dstinfo;
+    struct jvirt_barray_ptr *coef_arrays;
+    struct jpeg_error_mgr jsrcerr, jdsterr;
+    struct stat ifstats;
+    FILE *input_file;
+    FILE *output_file;
+    char *infileName = (*env)->GetStringUTFChars(env, input, NULL);
+    char *outfileName = (*env)->GetStringUTFChars(env, output, NULL);
+    input_file = fopen(infilename, "r");
+    if (input_file == NULL) {
+        throw Exception("Can't open input file");
+        return (1);
+    }
+    output_file = fopen(outfileName, "w");
+    if (output_file == NULL) {
+        throw Exception("Can't open output file");
+        return (1);
+    }
+
+    srcinfo.err = jpeg_std_error(&jsrcerr);
+    dstinfo.err = jpeg_std_error(&jdsterr);
+    jpeg_create_decompress(&srcinfo);
+    jpeg_create_compress(&dstinfo);
+    jpeg_stdio_src(&srcinfo, input_file);
+    jpeg_read_header(&srcinfo, TRUE);
+    coef_arrays = jpeg_read_coefficients(&srcinfo);
+    jvirt_barray_ptr temp_src_coef_arrays = *coef_arrays;
+    offset = 0;
+    if (temp_src_coef_arrays && offset < dataLen) {
+        JBLOCKARRAY jbarray = (temp_src_coef_arrays)->mem_buffer;
+        JBLOCKROW jbrow = NULL;
+        for (int i = 0; (offset < dataLen) && i < (temp_src_coef_arrays)->rows_in_mem; i++) {
+            jbrow = *jbarray;
+            for (int j = 0; (offset < dataLen) && j < (temp_src_coef_arrays)->blocksperrow; j++) {
+                for (int k = 1; (offset < dataLen) && k < 64; k++) {
+                    if (((*(jbrow + j))[k] != 0) && ((*(jbrow + j))[k] != 1)) {
+                        int move = offset % 8;
+                        if (!offset && move == 0) {
+                            bytes++;
+                        }
+                        char bits = ((*bytes) >> move) & 0x01;
+                        (*(jbrow + j))[k] = ((((*(jbrow + j))[k]) >> 1) << 1) | bits;
+                    }
+                }
+            }
+            jbarray++;
+        }
+        temp_src_coef_arrays = (temp_src_coef_arrays)->next;
+    }
+    jpeg_copy_critical_parameters(&srcinfo, &dstinfo);
+    dstinfo.optimize_coding = TRUE;
+    jpeg_stdio_dest(&dstinfo, output_file);
+    jpeg_write_coefficients(&dstinfo, coef_arrays);
+    jpeg_finish_compress(&dstinfo);
+    jpeg_destroy_compress(&dstinfo);
+    jpeg_finish_decompress(&srcinfo);
+    jpeg_destroy_decompress(&srcinfo);
+
+    fclose(input_file);
+    fclose(output_file);
+
+}
 JNIEXPORT jobject Java_org_telegram_messenger_Utilities_loadWebpImage(JNIEnv *env, jclass class, jobject buffer, int len, jobject options) {
     if (!buffer) {
         (*env)->ThrowNew(env, jclass_NullPointerException, "Input buffer can not be null");
@@ -557,7 +628,7 @@ JNIEXPORT jobject Java_org_telegram_messenger_Utilities_loadWebpImage(JNIEnv *en
     if (!WebPDecodeRGBAInto((uint8_t*)inputBuffer, len, (uint8_t*)bitmapPixels, bitmapInfo.height * bitmapInfo.stride, bitmapInfo.stride)) {
         AndroidBitmap_unlockPixels(env, outputBitmap);
         (*env)->DeleteLocalRef(env, outputBitmap);
-        (*env)->ThrowNew(env, jclass_RuntimeException, "Failed to unlock Bitmap pixels");
+        (*env)->ThrowNew(env, jclass_RuntimeException, "Failed to decode webp image");
         return 0;
     }
     

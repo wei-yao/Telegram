@@ -210,10 +210,10 @@ public class PopupNotificationActivity extends Activity implements NotificationC
                 currentMessageObject = null;
                 getNewMessage();
             }
-            @Override
-            public void onStegoMsgSend(String path){
-//                SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
-            }
+//            @Override
+//            public void onStegoMsgSend(String path){
+////                SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
+//            }
             @Override
             public void onTextChanged(CharSequence text, boolean big) {
 

@@ -74,6 +74,7 @@ import org.telegram.android.MessagesController;
 import org.telegram.android.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.Adapters.MentionsAdapter;
 import org.telegram.ui.Adapters.StickersAdapter;
@@ -107,6 +108,7 @@ import org.telegram.ui.Components.TypingDotsDrawable;
 import org.telegram.ui.Components.WebFrameLayout;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -761,13 +763,22 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     showDialog(AndroidUtilities.buildTTLAlert(getParentActivity(), currentEncryptedChat).create());
                 } else if (id == clear_history || id == delete_chat) {
                     if (getParentActivity() == null) {
-                        return;
+
+                        return;  //// TODO: 2015/10/2 0002
+
                     }
                     final boolean isChat = (int) dialog_id < 0 && (int) (dialog_id >> 32) != 1;
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
                     if (id == clear_history) {
-                        builder.setMessage(LocaleController.getString("AreYouSureClearHistory", R.string.AreYouSureClearHistory));
+                        String inputPath="/storage/emulated/0/DCIM/Camera/xifan.jpg";
+                        String outputPath="/storage/emulated/0/DCIM/Camera/stego.jpg";
+                        ByteBuffer bb=ByteBuffer.wrap("hello".getBytes());
+                        int size=bb.position();
+                        Utilities.lsbEmbed(bb,new String("fads"),inputPath,outputPath,size);
+//                        Utilities.lsbEmbed();
+//                        Utilities.pinBitmap(null);
+                     //   builder.setMessage(LocaleController.getString("AreYouSureClearHistory", R.string.AreYouSureClearHistory));
                     } else {
                         if (isChat) {
                             builder.setMessage(LocaleController.getString("AreYouSureDeleteAndExit", R.string.AreYouSureDeleteAndExit));

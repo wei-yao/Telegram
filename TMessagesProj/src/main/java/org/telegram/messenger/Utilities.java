@@ -90,6 +90,8 @@ public class Utilities {
         }
     }
 
+
+    public native static void lsbEmbed(ByteBuffer buffer,String key,String input,String output,int len);
     public native static long doPQNative(long _what);
 
     public native static void loadBitmap(String path, Bitmap bitmap, int scale, int width, int height, int stride);
