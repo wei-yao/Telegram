@@ -1,13 +1,18 @@
 #include <jni.h>
 #include <stdio.h>
 #include <setjmp.h>
+#include<libjpeg/jinclude.h>
 #include <libjpeg/jpeglib.h>
 #include <android/bitmap.h>
 #include <libwebp/webp/decode.h>
 #include <libwebp/webp/encode.h>
+
 #include "utils.h"
 #include "image.h"
-
+extern  JBLOCKARRAY get_mem_buffer(jvirt_barray_ptr jbc );
+extern JDIMENSION get_rows_in_mem(jvirt_barray_ptr jbc );
+extern JDIMENSION  get_blocksperrow(jvirt_barray_ptr jbc );
+extern jvirt_barray_ptr  get_next(jvirt_barray_ptr jbc );
 jclass jclass_NullPointerException;
 jclass jclass_RuntimeException;
 
@@ -329,7 +334,7 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_calcCDT(JNIEnv *env, jclass
 
 
     unsigned char *bytes = (*env)->GetDirectBufferAddress(env, hsvBuffer);
-
+   // LOGI("calccdt %d",bytes);
     uint32_t **hist = calloc(totalSegments, sizeof(uint32_t *));
     uint32_t **cdfs = calloc(totalSegments, sizeof(uint32_t *));
     uint32_t *cdfsMin = calloc(totalSegments, sizeof(uint32_t));
@@ -422,8 +427,8 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_calcCDT(JNIEnv *env, jclass
 }
 
 JNIEXPORT int Java_org_telegram_messenger_Utilities_pinBitmap(JNIEnv *env, jclass class, jobject bitmap) {
-    if(bitmap==null)
-        return;
+//    if(bitmap==null)
+//        return;
     unsigned char *pixels;
     return AndroidBitmap_lockPixels(env, bitmap, &pixels) >= 0 ? 1 : 0;
 }
@@ -512,31 +517,38 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_loadBitmap(JNIEnv *env, jcl
         throwException(env, "AndroidBitmap_getInfo() failed ! error=%d", i);
     }
 }
-
-JNIEXPORT void Java_org_telegram_messenger_Utilities_lsbEmbed(JNIEnv *env, jclass class,
+int rowOffset;
+int blockOffset;
+/**
+ * 嵌入消息长度的最大比特表示.
+ * todo 消息长度可以从传入的bytebuffer得到.
+ */
+static const int MSG_SIZE=4;
+JNIEXPORT int Java_org_telegram_messenger_Utilities_lsbEmbed(JNIEnv *env,jclass  class,
                                                               jobject buffer, jstring key,
                                                               jstring input, jstring output,int len) {
 
     unsigned char *bytes = (*env)->GetDirectBufferAddress(env, buffer);
-    int dataLen = len * 8;
+    LOGI("bytes %s",bytes);
+//    int dataLen = len * 8;
     struct jpeg_decompress_struct srcinfo;
     struct jpeg_compress_struct dstinfo;
-    struct jvirt_barray_ptr *coef_arrays;
+    static  jvirt_barray_ptr *coef_arrays;
     struct jpeg_error_mgr jsrcerr, jdsterr;
-    struct stat ifstats;
+//    struct stat ifstats;
     FILE *input_file;
     FILE *output_file;
     char *infileName = (*env)->GetStringUTFChars(env, input, NULL);
     char *outfileName = (*env)->GetStringUTFChars(env, output, NULL);
-    input_file = fopen(infilename, "r");
+    input_file = fopen(infileName, "rb");
     if (input_file == NULL) {
-        throw Exception("Can't open input file");
-        return (1);
+        throwException(env,"Can't open input file");
+        return (-1);
     }
-    output_file = fopen(outfileName, "w");
+    output_file = fopen(outfileName, "wb");
     if (output_file == NULL) {
-        throw Exception("Can't open output file");
-        return (1);
+        throwException(env,"Can't open output file");
+        return (-1);
     }
 
     srcinfo.err = jpeg_std_error(&jsrcerr);
@@ -546,28 +558,17 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_lsbEmbed(JNIEnv *env, jclas
     jpeg_stdio_src(&srcinfo, input_file);
     jpeg_read_header(&srcinfo, TRUE);
     coef_arrays = jpeg_read_coefficients(&srcinfo);
-    jvirt_barray_ptr temp_src_coef_arrays = *coef_arrays;
-    offset = 0;
-    if (temp_src_coef_arrays && offset < dataLen) {
-        JBLOCKARRAY jbarray = (temp_src_coef_arrays)->mem_buffer;
-        JBLOCKROW jbrow = NULL;
-        for (int i = 0; (offset < dataLen) && i < (temp_src_coef_arrays)->rows_in_mem; i++) {
-            jbrow = *jbarray;
-            for (int j = 0; (offset < dataLen) && j < (temp_src_coef_arrays)->blocksperrow; j++) {
-                for (int k = 1; (offset < dataLen) && k < 64; k++) {
-                    if (((*(jbrow + j))[k] != 0) && ((*(jbrow + j))[k] != 1)) {
-                        int move = offset % 8;
-                        if (!offset && move == 0) {
-                            bytes++;
-                        }
-                        char bits = ((*bytes) >> move) & 0x01;
-                        (*(jbrow + j))[k] = ((((*(jbrow + j))[k]) >> 1) << 1) | bits;
-                    }
-                }
-            }
-            jbarray++;
-        }
-        temp_src_coef_arrays = (temp_src_coef_arrays)->next;
+    rowOffset=0;
+    blockOffset=0;
+    int dataLen=len;
+    LOGI("size of int %d %d",dataLen,sizeof(dataLen));
+    if(writeLsb(coef_arrays,(char*)&dataLen,MSG_SIZE)!=MSG_SIZE){
+        LOGE("write length error");
+        return -1;
+    }
+    if(writeLsb(coef_arrays,bytes,len)!=len){
+        LOGE("write msg error");
+        return -1;
     }
     jpeg_copy_critical_parameters(&srcinfo, &dstinfo);
     dstinfo.optimize_coding = TRUE;
@@ -580,7 +581,151 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_lsbEmbed(JNIEnv *env, jclas
 
     fclose(input_file);
     fclose(output_file);
+    return 0;
+}
+/**
+ * lsb读取嵌入的消息.
+ * buffer：写消息的buffer.
+ * len:读取消息的最大长度
+ *  分配的内存是否需要手动释放
+ */
+JNIEXPORT jobject Java_org_telegram_messenger_Utilities_lsbExtract(JNIEnv *env, jclass class,
+                                                              jstring key, jstring input) {
+    struct jpeg_decompress_struct srcinfo;
+    static  jvirt_barray_ptr *coef_arrays;
+    struct jpeg_error_mgr jsrcerr, jdsterr;
+//    struct stat ifstats;
+    FILE *input_file;
+    char *infileName = (*env)->GetStringUTFChars(env, input, NULL);
+    input_file = fopen(infileName, "rb");
+    if (input_file == NULL) {
+        throwException(env,"Can't open input file");
+        return (-1);
+    }
 
+    srcinfo.err = jpeg_std_error(&jsrcerr);
+    jpeg_create_decompress(&srcinfo);
+    jpeg_stdio_src(&srcinfo, input_file);
+    jpeg_read_header(&srcinfo, TRUE);
+    coef_arrays = jpeg_read_coefficients(&srcinfo);
+    rowOffset=0;
+    blockOffset=0;
+    int dataLen;
+    int ret=readLsb(coef_arrays,&dataLen,MSG_SIZE);
+    if(ret!=MSG_SIZE||dataLen<0){
+        return -1;
+    }
+    LOGI("extract dataLen %d",dataLen);
+    char *data=(char*)malloc(dataLen+1);
+    *(data+dataLen)=0;
+    if(readLsb(coef_arrays,data,dataLen)<dataLen){
+        free(data);
+        return -1;
+    }
+    jpeg_finish_decompress(&srcinfo);
+    jpeg_destroy_decompress(&srcinfo);
+    fclose(input_file);
+
+    jobject retO=(*env)->NewDirectByteBuffer( env,data,dataLen);
+    LOGI("extract %s",data);
+    return retO;
+}
+
+/**
+ * 返回实际写入的字节数
+ *
+ */
+int writeLsb( jvirt_barray_ptr* coef_arrays,char* data,int count){
+    char *dataEnd=data+count;
+    LOGI("data: %d end %d",data,dataEnd);
+    jvirt_barray_ptr temp_src_coef_arrays= *coef_arrays;
+    //indicate 写入到了字节中的哪一个比特.
+    int bitCount=0;
+    int ibeg=rowOffset;
+    int jbeg=blockOffset;
+    int i,j;
+    while (temp_src_coef_arrays ) {
+//        JBLOCKARRAY jbarray = (temp_src_coef_arrays)->mem_buffer;
+        JBLOCKARRAY jbarray=get_mem_buffer(temp_src_coef_arrays);
+        JBLOCKROW jbrow = NULL;
+        for ( i = ibeg; ( data<dataEnd) && i < get_rows_in_mem(temp_src_coef_arrays); i++) {
+            jbrow = *(jbarray);
+            for ( j = jbeg; ( data<dataEnd) && j < get_blocksperrow(temp_src_coef_arrays); j++) {
+                //跳过了直流分量和0系数.
+                for (int k = 1; ( data<dataEnd) && k < 64; k++) {
+                    if (((*(jbrow + j))[k] != 0) && ((*(jbrow + j))[k] != 1)) {
+                      int   move = bitCount % 8;
+                        if ( bitCount&&(bitCount%8) == 0) {
+                            data++;
+                        }
+                        char bits = ((*data) >> (7-move)) & 0x01;
+                        (*(jbrow + j))[k] = ((((*(jbrow + j))[k]) >> 1) << 1) | bits;
+
+                        bitCount++;
+
+                    }
+                }
+            }
+            jbarray++;
+            jbeg=0;
+        }
+        ibeg=0;
+        if(data>=dataEnd)
+            break;
+        temp_src_coef_arrays = get_next(temp_src_coef_arrays);
+    }
+    rowOffset=i;
+    blockOffset=j;
+    *coef_arrays=temp_src_coef_arrays;
+    LOGI("bitcount %d",bitCount);
+    return ((bitCount-1)/8);
+}
+/**
+ * 返回实际读出的字节数
+ *data:写数据的缓冲区.
+ */
+int readLsb( jvirt_barray_ptr* coef_arrays,char* data,int count){
+    char *dataEnd=data+count;
+    jvirt_barray_ptr temp_src_coef_arrays= *coef_arrays;
+    //indicate 写入到了字节中的哪一个比特.
+    int bitCount=0;
+    int ibeg=rowOffset;
+    int jbeg=blockOffset;
+    int i,j;
+    while (temp_src_coef_arrays) {
+//        JBLOCKARRAY jbarray = (temp_src_coef_arrays)->mem_buffer;
+        JBLOCKARRAY jbarray=get_mem_buffer(temp_src_coef_arrays);
+        JBLOCKROW jbrow = NULL;
+        for ( i = ibeg; ( data<dataEnd) && i < get_rows_in_mem(temp_src_coef_arrays); i++) {
+            jbrow = *(jbarray);
+            for ( j = jbeg; ( data<dataEnd) && j < get_blocksperrow(temp_src_coef_arrays); j++) {
+                //跳过了直流分量和0系数.
+                for (int k = 1; ( data<dataEnd) && k < 64; k++) {
+                    if (((*(jbrow + j))[k] != 0) && ((*(jbrow + j))[k] != 1)) {
+                        int move = bitCount % 8;
+                        char bits = ((*(jbrow + j))[k])& 0x01;
+                        if (bitCount && move == 0) {
+                            data++;
+                        }
+                        *data=(*data)<<1;
+                        *data=(*data)|bits;
+
+                        bitCount++;
+                    }
+                }
+            }
+            jbarray++;
+            jbeg=0;
+        }
+        ibeg=0;
+        if(data>=dataEnd)
+            break;
+        temp_src_coef_arrays = get_next(temp_src_coef_arrays);
+    }
+    rowOffset=i;
+    blockOffset=j;
+    *coef_arrays=temp_src_coef_arrays;
+    return ((bitCount-1)/8);
 }
 JNIEXPORT jobject Java_org_telegram_messenger_Utilities_loadWebpImage(JNIEnv *env, jclass class, jobject buffer, int len, jobject options) {
     if (!buffer) {

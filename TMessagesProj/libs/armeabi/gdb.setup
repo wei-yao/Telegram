@@ -1,0 +1,2 @@
+set solib-search-path D:/code/android/telegram/Telegram/TMessagesProj//obj/local/armeabi
+directory D:/Users/yao/AppData/Local/Android/ndk/platforms/android-9/arch-arm/usr/include D:/Users/yao/AppData/Local/Android/ndk/sources/android/cpufeatures D:/code/android/telegram/Telegram/TMessagesProj//jni D:/Users/yao/AppData/Local/Android/ndk/sources/cxx-stl/system ./opus/include ./opus/silk ./opus/silk/fixed ./opus/celt ./opus/opusfile ./libyuv/include D:/Users/yao/AppData/Local/Android/ndk/sources/cxx-stl/system/include ./libwebp/src

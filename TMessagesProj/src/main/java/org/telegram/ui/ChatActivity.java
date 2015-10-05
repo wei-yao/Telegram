@@ -110,8 +110,10 @@ import org.telegram.ui.Components.WebFrameLayout;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.Semaphore;
 
 public class ChatActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, MessagesActivity.MessagesActivityDelegate,
@@ -773,12 +775,17 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     if (id == clear_history) {
                         String inputPath="/storage/emulated/0/DCIM/Camera/xifan.jpg";
                         String outputPath="/storage/emulated/0/DCIM/Camera/stego.jpg";
-                        ByteBuffer bb=ByteBuffer.wrap("hello".getBytes());
-                        int size=bb.position();
-                        Utilities.lsbEmbed(bb,new String("fads"),inputPath,outputPath,size);
-//                        Utilities.lsbEmbed();
-//                        Utilities.pinBitmap(null);
-                     //   builder.setMessage(LocaleController.getString("AreYouSureClearHistory", R.string.AreYouSureClearHistory));
+                        Random random=new Random();
+                        byte[] msg=new byte[5*1024];
+                        random.nextBytes(msg);
+//                        String msg="hello";
+                        ByteBuffer bb=ByteBuffer.allocateDirect(msg.length);
+                        bb.put(msg);
+                        Utilities.lsbEmbed(bb, new String("fads"), inputPath, outputPath, bb.capacity());
+                          ByteBuffer ret=Utilities.lsbExtract("", outputPath);
+                        byte[] extract=new byte[ret.capacity()];
+                        ret.get(extract);
+                        System.out.println("result " + Arrays.equals(extract,msg));
                     } else {
                         if (isChat) {
                             builder.setMessage(LocaleController.getString("AreYouSureDeleteAndExit", R.string.AreYouSureDeleteAndExit));

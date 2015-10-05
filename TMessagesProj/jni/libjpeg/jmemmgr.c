@@ -1116,3 +1116,23 @@ jinit_memory_mgr (j_common_ptr cinfo)
 #endif
 
 }
+/**
+ * although it is terrible to edit the libjpeg source here,adding this methods facilitate
+ * the read and write of the coefficient of the jpeg.
+ * weiyao 2015-10-05
+ */
+JBLOCKARRAY get_mem_buffer(jvirt_barray_ptr jbc ){
+  return jbc->mem_buffer;
+
+}
+JDIMENSION get_rows_in_mem(jvirt_barray_ptr jbc ){
+  return jbc->rows_in_mem;
+
+}
+JDIMENSION  get_blocksperrow(jvirt_barray_ptr jbc ){
+  return jbc->blocksperrow;
+}
+jvirt_barray_ptr  get_next(jvirt_barray_ptr jbc ){
+  return jbc->next;
+}
+
