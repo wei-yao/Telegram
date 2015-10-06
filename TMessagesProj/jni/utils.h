@@ -25,5 +25,5 @@
 #endif
 
 void throwException(JNIEnv *env, char *format, ...);
-
+jobject newInteger(JNIEnv* env, jint value);
 #endif

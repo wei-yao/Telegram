@@ -89,7 +89,7 @@ public class Utilities {
             }
         }
     }
-
+    public native static boolean isStego(String key,String input);
     public native static ByteBuffer lsbExtract(String key,String input);
     public native static int lsbEmbed(ByteBuffer buffer,String key,String input,String output,int len);
     public native static long doPQNative(long _what);

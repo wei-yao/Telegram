@@ -12,3 +12,12 @@ void throwException(JNIEnv *env, char *format, ...) {
     va_end(argptr);
     (*env)->ThrowNew(env, exClass, dest);
 }
+/**
+ * create a new Integer object
+ */
+jobject newInteger(JNIEnv* env, jint value)
+{
+    jclass cls = (*env)-> FindClass(env, "java/lang/Integer");
+    jmethodID methodID = (*env)-> GetMethodID(env, cls, "<init>", "(I)V");
+    return (*env)->NewObject(env,cls, methodID, value);
+}

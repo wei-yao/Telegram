@@ -46,6 +46,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import net.hockeyapp.android.utils.Util;
+
 import org.telegram.android.AndroidUtilities;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.android.Emoji;
@@ -600,7 +602,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     fragment.setDelegate(new PhotoAlbumPickerActivity.PhotoAlbumPickerActivityDelegate() {
                         @Override
                         public void didSelectPhotos(ArrayList<String> photos, ArrayList<String> captions, ArrayList<MediaController.SearchImage> webPhotos) {
-                           //发送图片的地方. photos 路径  dialog_id 不明 captions size 是1 但是element是null.
+                            //发送图片的地方. photos 路径  dialog_id 不明 captions size 是1 但是element是null.
                             SendMessagesHelper.prepareSendingPhotos(photos, null, dialog_id, replyingMessageObject, captions);
                             SendMessagesHelper.prepareSendingPhotosSearch(webPhotos, dialog_id, replyingMessageObject);
                             showReplyPanel(false, null, null, null, false, true);
@@ -769,23 +771,30 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         return;  //// TODO: 2015/10/2 0002
 
                     }
-                    final boolean isChat = (int) dialog_id < 0 && (int) (dialog_id >> 32) != 1;
+                    final boolean isChat = (int) dialog_id < 0 && (
+                            int) (dialog_id >> 32) != 1;
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
                     if (id == clear_history) {
-                        String inputPath="/storage/emulated/0/DCIM/Camera/xifan.jpg";
-                        String outputPath="/storage/emulated/0/DCIM/Camera/stego.jpg";
-                        Random random=new Random();
-                        byte[] msg=new byte[5*1024];
-                        random.nextBytes(msg);
-//                        String msg="hello";
-                        ByteBuffer bb=ByteBuffer.allocateDirect(msg.length);
-                        bb.put(msg);
-                        Utilities.lsbEmbed(bb, new String("fads"), inputPath, outputPath, bb.capacity());
-                          ByteBuffer ret=Utilities.lsbExtract("", outputPath);
-                        byte[] extract=new byte[ret.capacity()];
-                        ret.get(extract);
-                        System.out.println("result " + Arrays.equals(extract,msg));
+                        builder.setMessage(LocaleController.getString("AreYouSureClearHistory", R.string.AreYouSureClearHistory));
+//                        String inputPath="/mnt/sdcard/DCIM/Camera/cover.jpg";
+//                        String outputPath="/mnt/sdcard/DCIM/Camera/stego.jpg";
+//                        Random random=new Random();
+//                        byte[] msg=new byte[5];
+//                        random.nextBytes(msg);
+////                        String msg="hello";
+//                        ByteBuffer bb=ByteBuffer.allocateDirect(msg.length);
+//                        bb.put(msg);
+//
+//                        Utilities.lsbEmbed(bb, "", inputPath, outputPath, bb.capacity());
+//                        if(Utilities.isStego("",outputPath)){
+//                         ByteBuffer ret=Utilities.lsbExtract("", outputPath);
+//                        byte[] extract=new byte[ret.capacity()];
+//                        ret.get(extract);
+//                        System.out.println("result " + Arrays.equals(extract,msg));}
+//                        else{
+//                            System.out.println("is not stego");
+//                        }
                     } else {
                         if (isChat) {
                             builder.setMessage(LocaleController.getString("AreYouSureDeleteAndExit", R.string.AreYouSureDeleteAndExit));
@@ -1600,7 +1609,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         chatActivityEnterView.setId(id_chat_compose_panel);
         contentView.addView(chatActivityEnterView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.BOTTOM));
         chatActivityEnterView.setDelegate(new ChatActivityEnterView.ChatActivityEnterViewDelegate() {
-//            @Override
+            //            @Override
 //            public void onStegoMsgSend(String path){
 //                SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
 //            }
