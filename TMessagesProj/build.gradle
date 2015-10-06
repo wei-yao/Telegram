@@ -83,29 +83,29 @@ android {
         targetSdkVersion 22
         versionCode 542
         versionName "2.9.1"
-        ndk {
-            moduleName "tmessages.8"
-        }
+//        ndk {
+//            moduleName "tmessages.8"
+//        }
     }
-    task buildNative(type: Exec, description: 'Compile JNI source via NDK') {
-        def ndkDir = android.ndkDirectory
-        commandLine "$ndkDir/ndk-build.cmd",
-                '-C', file('jni').absolutePath, // Change src/main/jni the relative path to your jni source
-                '-j', Runtime.runtime.availableProcessors(),
-                'all',
-                'NDK_DEBUG=1'
-    }
-
-    task cleanNative(type: Exec, description: 'Clean JNI object files') {
-        def ndkDir = android.ndkDirectory
-        commandLine "$ndkDir/ndk-build.cmd",
-                '-C', file('jni').absolutePath, // Change src/main/jni the relative path to your jni source
-                'clean'
-    }
-
-    clean.dependsOn 'cleanNative'
-
-    tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative
-    }
+//    task buildNative(type: Exec, description: 'Compile JNI source via NDK') {
+//        def ndkDir = android.ndkDirectory
+//        commandLine "$ndkDir/ndk-build.cmd",
+//                '-C', file('jni').absolutePath, // Change src/main/jni the relative path to your jni source
+//                '-j', Runtime.runtime.availableProcessors(),
+//                'all',
+//                'NDK_DEBUG=1'
+//    }
+//
+//    task cleanNative(type: Exec, description: 'Clean JNI object files') {
+//        def ndkDir = android.ndkDirectory
+//        commandLine "$ndkDir/ndk-build.cmd",
+//                '-C', file('jni').absolutePath, // Change src/main/jni the relative path to your jni source
+//                'clean'
+//    }
+//
+//    clean.dependsOn 'cleanNative'
+//
+//    tasks.withType(JavaCompile) {
+//        compileTask -> compileTask.dependsOn buildNative
+//    }
 }

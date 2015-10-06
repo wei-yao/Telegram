@@ -768,7 +768,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 } else if (id == clear_history || id == delete_chat) {
                     if (getParentActivity() == null) {
 
-                        return;  //// TODO: 2015/10/2 0002
+                        return;
 
                     }
                     final boolean isChat = (int) dialog_id < 0 && (
