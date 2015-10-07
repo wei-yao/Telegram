@@ -1966,7 +1966,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
             }, true, RPCRequest.RPCRequestClassGeneric);
         }
     }
-
+//todo mark
     void processMessage(TLObject message, long messageId, int messageSeqNo, long messageSalt, TcpConnection connection, long innerMsgId, long containerMessageId) {
         if (message == null) {
             FileLog.e("tmessages", "message is null");
@@ -2630,7 +2630,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
             }
         }
     }
-
+//todo tcp connection received data
     @Override
     public void tcpConnectionReceivedData(TcpConnection connection, ByteBufferDesc data, int length) {
         if (connection.getDatacenterId() == currentDatacenterId && (connection.transportRequestClass & RPCRequest.RPCRequestClassGeneric) != 0) {
