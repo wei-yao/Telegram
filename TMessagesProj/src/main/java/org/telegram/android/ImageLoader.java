@@ -25,6 +25,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
+import android.widget.Toast;
 
 import org.telegram.messenger.DispatchQueue;
 import org.telegram.messenger.FileLoader;
@@ -1109,6 +1110,8 @@ public class ImageLoader {
                                 }
                             }
                         }
+                        //todo 在此解出隐写消息,并显示.
+                        extractMsg(finalFile);
                         ImageLoader.this.fileDidLoaded(location, finalFile, type);
                         NotificationCenter.getInstance().postNotificationName(NotificationCenter.FileDidLoaded, location);
                     }
@@ -1174,6 +1177,25 @@ public class ImageLoader {
         ApplicationLoader.applicationContext.registerReceiver(receiver, filter);
 
         FileLoader.getInstance().setMediaDirs(createMediaPaths());
+    }
+
+    /**
+     * 检测图像是否含有消息，提取并显示.
+     */
+    private void extractMsg(File file) {
+        if(!file.getName().endsWith(".jpg"))
+            return;
+        if(Utilities.isStego("",file.getAbsolutePath()))
+        {
+            ByteBuffer ret=Utilities.lsbExtract("", file.getAbsolutePath());
+            if(ret!=null) {
+                byte[] extract = new byte[ret.capacity()];
+                ret.get(extract);
+                String msg = new String(extract);
+                Toast.makeText(ApplicationLoader.applicationContext, msg, Toast.LENGTH_LONG).show();
+            }
+        }
+
     }
 
     private HashMap<Integer, File> createMediaPaths() {

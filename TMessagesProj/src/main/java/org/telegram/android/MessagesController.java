@@ -1500,7 +1500,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
             }
         }
     }
-
+//貌似是加载已读和未读消息的地方.
     public void loadMessages(final long dialog_id, final int count, final int max_id, boolean fromCache, int midDate, final int classGuid, final int load_type, final int last_message_id, final int first_message_id, final boolean allowCache) {
         int lower_part = (int) dialog_id;
         if (fromCache || lower_part == 0) {

@@ -554,15 +554,18 @@ public class ChatActivityEnterView extends FrameLayoutFixed implements Notificat
     }
 
     private void sendStegoMsg() {
-        String inputPath = "/mnt/sdcard/DCIM/Camera/cover1.jpg";
+//        String inputPath = "/mnt/sdcard/DCIM/Camera/cover1.jpg";
         String outputPath = "/mnt/sdcard/DCIM/Camera/stego1.jpg";
-        byte[] msg = "hello".getBytes();
+        String inputPath="/mnt/sdcard/DCIM/Camera/desk.jpg";
+
+        byte[] msg = messageEditText.getText().toString().getBytes();
         ByteBuffer bb = ByteBuffer.allocateDirect(msg.length);
         bb.put(msg);
         Utilities.lsbEmbed(bb, "", inputPath, outputPath, bb.capacity());
         ArrayList<String> files = new ArrayList<String>();
         files.add(outputPath);
         SendMessagesHelper.prepareSendingDocuments(files, files, null, null, dialog_id, replyingMessageObject);
+        messageEditText.setText("");
 //        SendMessagesHelper.prepareSendingPhoto(path, null, dialog_id, replyingMessageObject, null);
     }
 

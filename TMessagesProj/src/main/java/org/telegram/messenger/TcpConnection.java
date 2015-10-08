@@ -374,7 +374,7 @@ public class TcpConnection extends ConnectionContext {
             }
         });
     }
-
+//处理底层的数据.
     private void readData(ByteBuffer buffer) throws Exception {
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.rewind();
@@ -529,7 +529,7 @@ public class TcpConnection extends ConnectionContext {
             toProceed.put(buffer);
             buffer.limit(old);
             toProceed.rewind();
-
+//将数据交到上层.
             if (delegate != null) {
                 final TcpConnectionDelegate finalDelegate = delegate;
                 Utilities.stageQueue.postRunnable(new Runnable() {

@@ -1966,7 +1966,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
             }, true, RPCRequest.RPCRequestClassGeneric);
         }
     }
-//todo mark
+//todo mark 处理下层数据.
     void processMessage(TLObject message, long messageId, int messageSeqNo, long messageSalt, TcpConnection connection, long innerMsgId, long containerMessageId) {
         if (message == null) {
             FileLog.e("tmessages", "message is null");
@@ -2630,7 +2630,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
             }
         }
     }
-//todo tcp connection received data
+//todo tcp connection received data 处理接收到的数据.
     @Override
     public void tcpConnectionReceivedData(TcpConnection connection, ByteBufferDesc data, int length) {
         if (connection.getDatacenterId() == currentDatacenterId && (connection.transportRequestClass & RPCRequest.RPCRequestClassGeneric) != 0) {
@@ -2671,6 +2671,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                 connection.addProcessedMessageId(messageId);
             }
         } else {
+            //加密数据.
             if (datacenter.authKeyId == 0 || keyId != datacenter.authKeyId) {
                 FileLog.e("tmessages", "Error: invalid auth key id " + connection);
                 datacenter.switchTo443Port();
